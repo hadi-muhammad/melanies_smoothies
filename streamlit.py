@@ -4,10 +4,6 @@ import streamlit as st
 from snowflake.snowpark.functions import col
 import requests
 
-smoothiefroot_reponse = requests.get('https://my.smoothiefroot.com/api/fruit/watermelon')
-# st.text(smoothiefroot_reponse.json())
-sf_df = st.dataframe(data=smoothiefroot_reponse.json(),use_container_width=True)
-# Write directly to the app
 st.title(f"Customize Your Smoothie!")
 st.write(
   """Choose the **fruits** you want in your custom Smoothie!
@@ -29,7 +25,7 @@ st.write('The name on your Smoothie will be:', name_on_order)
 
 # session = get_active_session()
 cnx = st.connection("snowflake")
-session = connection.session()
+session = cnx.session()
 my_dataframe = session.table("smoothies.public.fruit_options").select(col('Fruit_Name'))
 # st.dataframe(data=my_dataframe, use_container_width=True)
 
@@ -43,12 +39,16 @@ if ingredients_list:
     # st.write(ingredients_list)
     # st.text(ingredients_list)
 
-    ingredients_string = ' '.join(ingredients_list)
-    # ingredients_string = ''
-    # for fruit_chosen in ingredients_list:
-    #     ingredients_string += fruit_chosen
+    # ingredients_string = ' '.join(ingredients_list)
+    ingredients_string = ''
+    for fruit_chosen in ingredients_list:
+        ingredients_string += fruit_chosen + ' '
+        st.subheader(fruit_chosen + ' Nutrition Information')
+        smoothiefroot_reponse = requests.get('https://my.smoothiefroot.com/api/fruit/' + fruit_chosen)
+        sf_df = st.dataframe(data=smoothiefroot_reponse.json(),use_container_width=True)
 
     # st.write(ingredients_string)
+    
 
     my_insert_stmt = """ insert into smoothies.public.orders(ingredients, name_on_order)
             values ('""" + ingredients_string + """','""" + name_on_order + """')"""
